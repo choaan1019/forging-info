@@ -1,17 +1,4 @@
-# OneDrive / Windows 系統檔
-desktop.ini
-*.tmp
-~$*
-Thumbs.db
-
-# 敏感資料
-.env
-*.key
-credentials.*
-
-# Claude Code 本地設定（含 permissions、可能記錄 token，絕不上雲）
+Personal info.md
+MY25 Forging group introduction-2025.02.10.ppt
+*.pptx
 .claude/
-
-# Node.js
-node_modules/
-package-lock.json

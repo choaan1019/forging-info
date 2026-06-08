@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forging Group Introduction — SRAM MY25</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:      #000000;
+    --card:    #141414;
+    --card2:   #1c1c1c;
+    --accent:  #FF8C00;
+    --orange:  #FF6B00;
+    --steel:   #aaaaaa;
+    --light:   #ffffff;
+    --white:   #ffffff;
+    --green:   #3ecf8e;
+    --yellow:  #FFD700;
+    --red:     #ff6b6b;
+    --title:   #FF8C00;
+    --highlight: #FFD700;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Nunito', 'Segoe UI Rounded', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── PROGRESS ── */
+  #progress {
+    position: fixed; top:0; left:0; height:3px; z-index:200;
+    background: linear-gradient(90deg, var(--accent), var(--orange));
+    transition: width .35s ease;
+  }
+
+  /* ── SLIDES ── */
+  #deck { position:relative; width:100vw; height:100vh; }
+
+  .slide {
+    position: absolute; inset:0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 56px 72px;
+    opacity: 0; transform: translateX(50px);
+    transition: opacity .4s ease, transform .4s ease;
+    pointer-events: none;
+  }
+  .slide.active  { opacity:1; transform:translateX(0); pointer-events:all; }
+  .slide.exit    { opacity:0; transform:translateX(-50px); }
+
+  /* ── BG VARIANTS ── */
+  .bg-content, .bg-member {
+    align-items: center;
+    justify-content: center;
+  }
+  /* 讓所有內容頁子元素寬度統一，置中對齊 */
+  .bg-content > *, .bg-member > * {
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+  }
+  /* member-layout 全寬 */
+  .bg-member > .member-layout {
+    max-width: none;
+  }
+  /* iframe 頁面維持全寬 */
+  .bg-content > iframe,
+  .bg-content > div > iframe {
+    max-width: none !important;
+  }
+  /* slide 9-12, 15：表格/SWOT 容器全寬 */
+  .slide[data-i="9"] > *,
+  .slide[data-i="10"] > *,
+  .slide[data-i="11"] > *,
+  .slide[data-i="12"] > *,
+  .slide[data-i="15"] > * {
+    max-width: none !important;
+  }
+  /* slide 13-14：所有直接子元素維持全寬 */
+  .slide[data-i="13"] > *,
+  .slide[data-i="14"] > * {
+    max-width: none !important;
+  }
+
+  .bg-title {
+    background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)),
+                url('bg_title_20260608_140137.png') center/cover no-repeat;
+  }
+  .bg-content {
+    background: #000 url('bg_forging_20260608_135403.png') center/cover no-repeat;
+  }
+  .bg-member  {
+    background: #000 url('bg_forging_20260608_135403.png') center/cover no-repeat;
+  }
+  .bg-close {
+    background: url('bg_close_20260608_140158.png') center/cover no-repeat;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .eyebrow {
+    font-size: 36px; font-weight:900; letter-spacing:6px;
+    text-transform: uppercase; color: var(--title); margin-bottom:14px;
+  }
+  h1 {
+    font-size: clamp(48px,6vw,80px); font-weight:900; line-height:1.05;
+    color: var(--title);
+    margin-bottom:18px;
+  }
+  h2 {
+    font-size: clamp(26px,3.2vw,42px); font-weight:900;
+    color: var(--title); margin-bottom:26px;
+    padding-left:20px; position:relative;
+  }
+  h2::before {
+    content:''; position:absolute; left:0; top:5px;
+    width:5px; height:72%; background:var(--yellow); border-radius:3px;
+  }
+  h2.no-bar { padding-left:0; }
+  h2.no-bar::before { display:none; }
+  .sub { font-size: clamp(17px,2vw,24px); color:#fff; margin-bottom:10px; font-weight:700; }
+  .meta { font-size:15px; color:var(--steel); margin-top:6px; font-weight:700; }
+
+  /* ── MEMBER CARD ── */
+  .member-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 32px;
+    width: 100%;
+    max-width: none;
+    align-items: start;
+  }
+  .member-avatar {
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--card2), var(--card));
+    border: 3px solid rgba(232,54,79,.4);
+    display: flex; align-items:center; justify-content:center;
+    font-size: 56px; font-weight:800;
+    color: var(--accent);
+    margin: 0 auto 16px;
+    text-transform: uppercase;
+  }
+  .member-left { display:flex; flex-direction:column; align-items:center; }
+  .member-name {
+    font-size: clamp(28px,3vw,40px); font-weight:900;
+    color: var(--title); text-align:center; line-height:1.15;
+  }
+  .member-title {
+    font-size: 15px; color: #fff; text-align:center;
+    margin-top:6px; font-weight:700;
+  }
+  .member-right { display:flex; flex-direction:column; gap:14px; }
+
+  /* ── INFO ROWS ── */
+  .info-block {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .info-label {
+    font-size:13px; font-weight:900; letter-spacing:2px;
+    text-transform:uppercase; color:var(--title); margin-bottom:8px;
+  }
+  .info-content { font-size:16px; color:#fff; line-height:1.7; font-weight:700; }
+
+  /* ── TAG CHIPS ── */
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
+  .chip {
+    display:inline-block; padding:5px 16px;
+    border-radius:20px; font-size:14px; font-weight:900;
+    background:rgba(255,140,0,.18); color:var(--title);
+    border:2px solid rgba(255,140,0,.5);
+  }
+  .chip.support {
+    background:rgba(255,255,255,.08); color:#fff;
+    border-color:rgba(255,255,255,.25);
+  }
+  .chip.green {
+    background:rgba(62,207,142,.12); color:var(--green);
+    border-color:rgba(62,207,142,.3);
+  }
+
+  /* ── GRID / TABLE ── */
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; width:100%; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; width:100%; }
+
+  .card {
+    background:var(--card);
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:12px; padding:20px;
+  }
+  .card-title {
+    font-size:13px; font-weight:900; letter-spacing:2px;
+    text-transform:uppercase; color:var(--title); margin-bottom:10px;
+  }
+  .card p, .card li { font-size:15px; color:#fff; line-height:1.75; font-weight:700; }
+  .card ul { padding-left:16px; }
+
+  table { width:100%; border-collapse:collapse; font-size:15px; }
+  th {
+    background:rgba(255,140,0,.15); color:var(--title);
+    padding:10px 14px; text-align:left; font-weight:900;
+    font-size:13px; letter-spacing:1px; text-transform:uppercase;
+  }
+  td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,.08); color:#fff; font-weight:700; }
+  tr:hover td { background:rgba(255,255,255,.03); }
+
+  /* ── BAR CHART ── */
+  /* ── EDITABLE TABLE ── */
+  .td-part {
+    padding: 12px 20px; border-bottom: 1px solid #2a2a2a;
+    color: var(--white); font-weight: 800; vertical-align: middle;
+  }
+  .td-edit {
+    padding: 12px 20px; border-bottom: 1px solid #2a2a2a;
+    color: var(--steel); vertical-align: middle;
+    outline: none; min-width: 120px;
+    transition: background .15s, color .15s;
+  }
+  .td-edit:hover { background: rgba(255,140,0,.06); }
+  .td-edit:focus {
+    background: rgba(255,140,0,.12);
+    color: var(--white);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .bar-label { width:140px; font-size:15px; color:#fff; flex-shrink:0; font-weight:800; }
+  .bar-track {
+    flex:1; height:28px; background:rgba(255,255,255,.05);
+    border-radius:6px; overflow:hidden;
+  }
+  .bar-fill {
+    height:100%; border-radius:6px;
+    display:flex; align-items:center; padding-left:10px;
+    font-size:12px; font-weight:700; color:#fff; white-space:nowrap;
+  }
+
+  /* ── SWOT ── */
+  .swot { display:grid; grid-template-columns:1fr 1fr; gap:21px; width:100%; }
+  .swot-box { border-radius:12px; padding:27px 30px; }
+  .sw-s { background:rgba(62,207,142,.1);  border:1px solid rgba(62,207,142,.25); }
+  .sw-w { background:rgba(255,107,107,.1); border:1px solid rgba(255,107,107,.25); }
+  .sw-o { background:rgba(255,107,53,.1);  border:1px solid rgba(255,107,53,.25); }
+  .sw-t { background:rgba(136,153,170,.07);border:1px solid rgba(136,153,170,.2); }
+  .swot-label {
+    font-size:21px; font-weight:900; letter-spacing:3px;
+    text-transform:uppercase; margin-bottom:9px;
+  }
+  .sw-s .swot-label { color:var(--green); }
+  .sw-w .swot-label { color:var(--red); }
+  .sw-o .swot-label { color:var(--title); }
+  .sw-t .swot-label { color:#fff; }
+  .swot-box ul { padding-left:18px; }
+  .swot-box li { font-size:21px; color:#fff; line-height:1.7; margin-bottom:4px; font-weight:700; }
+
+  /* ── DECO ── */
+  .deco {
+    position:absolute; border-radius:50%;
+    opacity:.06; pointer-events:none;
+  }
+
+  /* ── NAV ── */
+  #nav {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:18px; z-index:100;
+    background:rgba(0,0,0,.9); backdrop-filter:blur(14px);
+    border:2px solid rgba(255,140,0,.3); border-radius:40px;
+    padding:9px 22px;
+  }
+  .nb {
+    background:none; border:none; color:var(--title);
+    font-size:20px; cursor:pointer; padding:4px 8px; transition:color .2s;
+    font-family:'Nunito',sans-serif; font-weight:900;
+  }
+  .nb:hover { color:var(--yellow); }
+  .nb:disabled { color:rgba(255,255,255,.2); cursor:default; }
+  #counter { font-size:14px; color:#fff; min-width:54px; text-align:center; font-weight:900; }
+
+  #hint {
+    position:fixed; bottom:24px; right:28px;
+    font-size:11px; color:rgba(255,255,255,.22);
+  }
+
+  /* ── MULTI-SELECT ── */
+  .ms-wrap{position:relative;}
+  .ms-display{min-height:34px;padding:4px 8px;background:var(--card2);border:1px solid #333;border-radius:8px;cursor:pointer;display:flex;flex-wrap:wrap;gap:4px;align-items:center;transition:border-color .15s;}
+  .ms-display:hover{border-color:var(--accent);}
+  .ms-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-height:20px;}
+  .ms-chip{background:rgba(255,140,0,.18);color:var(--accent);border:1px solid rgba(255,140,0,.4);border-radius:12px;padding:2px 10px;font-size:12px;font-weight:900;}
+  .ms-chip.ms-chip-red{background:rgba(255,107,107,.18);color:var(--red);border-color:rgba(255,107,107,.4);}
+  .ms-caret{color:var(--steel);font-size:11px;margin-left:4px;flex-shrink:0;}
+  .ms-dd{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:9999;background:#1e1e1e;border:1px solid #3a3a3a;border-radius:10px;padding:6px 4px;min-width:130px;box-shadow:0 8px 28px rgba(0,0,0,.8);}
+  .ms-dd.open{display:block;}
+  .ms-dd label{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:13px;color:#ddd;font-weight:800;white-space:nowrap;transition:background .15s;}
+  .ms-dd label:hover{background:rgba(255,140,0,.12);}
+  .ms-dd input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="deck">
+
+  <!-- ① TITLE -->
+  <div class="slide bg-title active" data-i="1">
+    <div class="deco" style="width:480px;height:480px;background:var(--accent);top:-160px;right:-100px;"></div>
+    <div class="deco" style="width:280px;height:280px;background:#3a006a;bottom:-70px;left:-50px;"></div>
+    <div class="eyebrow">SRAM · MY26</div>
+    <h1 style="font-size:clamp(52px,7vw,96px);white-space:nowrap;">Forging Group Introduction</h1>
+    <p class="sub">Manufacturing Engineering · Supplier Development</p>
+    <p class="meta">Presenter: Verny Chen &nbsp;|&nbsp; <span id="today-title"></span></p>
+  </div>
+
+  <!-- ② ALVIN WU -->
+  <div class="slide bg-member" data-i="2">
+    <div class="eyebrow">Team Member</div>
+    <div class="member-layout">
+      <div class="member-left">
+        <div class="member-avatar" style="background:none;border:none;padding:0;overflow:hidden;">
+          <img src="Alvin Wu-1.jpg" alt="Alvin Wu" style="width:180px;height:180px;object-fit:cover;object-position:center 35%;border-radius:50%;border:3px solid rgba(232,54,79,.4);">
+        </div>
+        <div class="member-name">Alvin Wu<br><span style="font-size:18px;color:var(--steel);">吳國鼎</span></div>
+        <div class="member-title">Senior Supplier Development Engineer</div>
+      </div>
+      <div class="member-right">
+        <div class="info-block">
+          <div class="info-label">Job Information</div>
+          <div class="info-content">
+            <span style="color:var(--steel);font-size:12px;">Global Title</span><br>
+            Senior Supplier Development Engineer<br>
+            <span style="color:var(--steel);font-size:12px;margin-top:4px;display:block;">Local Title</span>
+            資深供應商工程開發工程師
+          </div>
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="info-block">
+            <div class="info-label">Department</div>
+            <div class="info-content">Supply Development Engineering<br><span style="color:var(--steel);font-size:12px;">Operations Engineering · Manufacturing Indirect</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Tenure</div>
+            <div class="info-content">Hired: <strong style="color:var(--orange);">Oct 12, 2021</strong><br><span style="color:var(--green);">~4 yrs 8 mos at SRAM</span></div>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Product Responsibility</div>
+          <div class="chips">
+            <span class="chip">◎ All forging parts of in-house project</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Manager · Location</div>
+          <div class="info-content">Verny (Wei Sheng) Chen — Assistant Manager &nbsp;·&nbsp; ADC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ BRUCE HSU -->
+  <div class="slide bg-member" data-i="3">
+    <div class="eyebrow">Team Member</div>
+    <div class="member-layout">
+      <div class="member-left">
+        <div class="member-avatar" style="background:none;padding:0;overflow:hidden;border:3px solid rgba(255,140,0,.4);">
+          <img src="許基昌.jpg" alt="Bruce Hsu" style="width:180px;height:180px;object-fit:cover;object-position:center top;transform:scale(1.8);transform-origin:center 60%;">
+        </div>
+        <div class="member-name">Bruce Hsu<br><span style="font-size:18px;color:var(--steel);">許基昌</span></div>
+        <div class="member-title">Supplier Development Engineer</div>
+      </div>
+      <div class="member-right">
+        <div class="info-block">
+          <div class="info-label">Job Information</div>
+          <div class="info-content">
+            <span style="color:var(--steel);font-size:12px;">Global Title</span><br>
+            Supplier Development Engineer<br>
+            <span style="color:var(--steel);font-size:12px;margin-top:4px;display:block;">Local Title</span>
+            供應商工程開發工程師
+          </div>
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="info-block">
+            <div class="info-label">Department</div>
+            <div class="info-content">Supply Development Engineering<br><span style="color:var(--steel);font-size:12px;">Operations Engineering · Manufacturing Indirect</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Tenure</div>
+            <div class="info-content">Hired: <strong style="color:var(--orange);">Dec 4, 2023</strong><br><span style="color:var(--yellow);">~2 yrs 6 mos at SRAM</span></div>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Product Responsibility</div>
+          <div class="chips">
+            <span class="chip">◎ Spindle Lug</span>
+            <span class="chip">◎ Pedal Lug</span>
+            <span class="chip">◎ Road Crank Arm</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Manager · Location</div>
+          <div class="info-content">Verny (Wei Sheng) Chen — Assistant Manager &nbsp;·&nbsp; ADC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ CHARLIE WU -->
+  <div class="slide bg-member" data-i="4">
+    <div class="eyebrow">Team Member</div>
+    <div class="member-layout">
+      <div class="member-left">
+        <div class="member-avatar" style="background:none;border:none;padding:0;overflow:hidden;">
+          <img src="charlie_3d_20260608_145258.png" alt="Charlie Wu" style="width:180px;height:180px;object-fit:contain;object-position:center 15%;border-radius:50%;border:3px solid rgba(255,140,0,.4);background:transparent;">
+        </div>
+        <div class="member-name">Charlie Wu<br><span style="font-size:18px;color:var(--steel);">吳鴻琦</span></div>
+        <div class="member-title">Supplier Development Engineer</div>
+      </div>
+      <div class="member-right">
+        <div class="info-block">
+          <div class="info-label">Job Information</div>
+          <div class="info-content">
+            <span style="color:var(--steel);font-size:12px;">Global Title</span><br>
+            Supplier Development Engineer<br>
+            <span style="color:var(--steel);font-size:12px;margin-top:4px;display:block;">Local Title</span>
+            供應商工程開發工程師
+          </div>
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="info-block">
+            <div class="info-label">Department</div>
+            <div class="info-content">Supply Development Engineering<br><span style="color:var(--steel);font-size:12px;">Operations Engineering · Manufacturing Indirect</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Tenure</div>
+            <div class="info-content">Hired: <strong style="color:var(--orange);">Feb 23, 2026</strong><br><span style="color:var(--yellow);">~4 mos at SRAM</span></div>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Product Responsibility</div>
+          <div class="chips">
+            <span class="chip">◎ Caliper</span>
+            <span class="chip">◎ Lever Body</span>
+            <span class="chip">◎ Bracket</span>
+            <span class="chip">◎ Hub</span>
+            <span class="chip">◎ Drive Body</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Manager · Location</div>
+          <div class="info-content">Verny (Wei Sheng) Chen — Assistant Manager &nbsp;·&nbsp; ADC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ DICK WU -->
+  <div class="slide bg-member" data-i="5">
+    <div class="eyebrow">Team Member</div>
+    <div class="member-layout">
+      <div class="member-left">
+        <div class="member-avatar" style="background:none;border:none;padding:0;overflow:hidden;">
+          <img src="2403587 Dick Wu.jpg" alt="Dick Wu" style="width:180px;height:180px;object-fit:cover;object-position:center 12%;border-radius:50%;border:3px solid rgba(255,140,0,.4);">
+        </div>
+        <div class="member-name">Dick Wu<br><span style="font-size:18px;color:var(--steel);">吳鴻哲</span></div>
+        <div class="member-title">Specialist · 專員</div>
+      </div>
+      <div class="member-right">
+        <div class="info-block">
+          <div class="info-label">Job Information</div>
+          <div class="info-content">
+            <span style="color:var(--steel);font-size:12px;">Global Title</span><br>
+            Specialist<br>
+            <span style="color:var(--steel);font-size:12px;margin-top:4px;display:block;">Alternate Title</span>
+            Process Specialist / 零件製程開發專員
+          </div>
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="info-block">
+            <div class="info-label">Department</div>
+            <div class="info-content">Supply Development Engineering<br><span style="color:var(--steel);font-size:12px;">Operations Engineering · Manufacturing Indirect</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Tenure</div>
+            <div class="info-content">Hired: <strong style="color:var(--orange);">Feb 17, 2006</strong><br><span style="color:var(--green);">~20 yrs 3 mos at SRAM</span></div>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Product Responsibility</div>
+          <div class="chips">
+            <span class="chip">◎ MTB Crank Arm</span>
+            <span class="chip">◎ Spider</span>
+            <span class="chip">◎ Spindle</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Manager · Location</div>
+          <div class="info-content">Verny (Wei Sheng) Chen — Assistant Manager &nbsp;·&nbsp; ADC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ LEO LIAO -->
+  <div class="slide bg-member" data-i="6">
+    <div class="eyebrow">Team Member</div>
+    <div class="member-layout">
+      <div class="member-left">
+        <div class="member-avatar" style="background:none;border:none;padding:0;overflow:hidden;">
+          <img src="2402847 Leo Liao.jpg" alt="Leo Liao" style="width:180px;height:180px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,140,0,.4);">
+        </div>
+        <div class="member-name">Leo Liao<br><span style="font-size:18px;color:var(--steel);">廖桂毅</span></div>
+        <div class="member-title">Senior Supplier Development Engineer</div>
+      </div>
+      <div class="member-right">
+        <div class="info-block">
+          <div class="info-label">Job Information</div>
+          <div class="info-content">
+            <span style="color:var(--steel);font-size:12px;">Global Title</span><br>
+            Senior Supplier Development Engineer<br>
+            <span style="color:var(--steel);font-size:12px;margin-top:4px;display:block;">Local Title</span>
+            資深供應商工程開發工程師
+          </div>
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="info-block">
+            <div class="info-label">Department</div>
+            <div class="info-content">Supply Development Engineering<br><span style="color:var(--steel);font-size:12px;">Operations Engineering · Manufacturing Indirect</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Tenure</div>
+            <div class="info-content">Hired: <strong style="color:var(--orange);">Aug 23, 2004</strong><br><span style="color:var(--green);">~21 yrs 9 mos at SRAM</span></div>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Product Responsibility</div>
+          <div class="chips">
+            <span class="chip">◎ Eyelet</span>
+            <span class="chip">◎ Damper Body</span>
+            <span class="chip">◎ Crown</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Manager · Location</div>
+          <div class="info-content">Verny (Wei Sheng) Chen — Assistant Manager &nbsp;·&nbsp; ADC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ MARCO KUO -->
+  <div class="slide bg-member" data-i="7">
+    <div class="eyebrow">Team Member</div>
+    <div class="member-layout">
+      <div class="member-left">
+        <div class="member-avatar" style="background:none;border:none;padding:0;overflow:hidden;">
+          <img src="Marco Kuo.jpg" alt="Marco Kuo" style="width:180px;height:180px;object-fit:cover;object-position:center 12%;border-radius:50%;border:3px solid rgba(255,140,0,.4);">
+        </div>
+        <div class="member-name">Marco Kuo<br><span style="font-size:18px;color:var(--steel);">郭浚詠</span></div>
+        <div class="member-title">Senior Supplier Development Engineer</div>
+      </div>
+      <div class="member-right">
+        <div class="info-block">
+          <div class="info-label">Job Information</div>
+          <div class="info-content">
+            <span style="color:var(--steel);font-size:12px;">Global Title</span><br>
+            Senior Supplier Development Engineer<br>
+            <span style="color:var(--steel);font-size:12px;margin-top:4px;display:block;">Local Title</span>
+            資深供應商工程開發工程師
+          </div>
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="info-block">
+            <div class="info-label">Department</div>
+            <div class="info-content">Supply Development Engineering<br><span style="color:var(--steel);font-size:12px;">Operations Engineering · Manufacturing Indirect</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Tenure</div>
+            <div class="info-content">SRAM since: <strong style="color:var(--orange);">May 29, 2012</strong><br><span style="color:var(--green);">~14 yrs at SRAM</span></div>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Product Responsibility</div>
+          <div class="chips">
+            <span class="chip">◎ B-Knuckle</span>
+            <span class="chip">◎ Inner Link</span>
+            <span class="chip">◎ Outer Link</span>
+            <span class="chip">◎ Inner Cage</span>
+            <span class="chip">◎ Lever</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Manager · Location</div>
+          <div class="info-content">Verny (Wei Sheng) Chen — Assistant Manager &nbsp;·&nbsp; ADC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ SEAN KUO -->
+  <div class="slide bg-member" data-i="8">
+    <div class="eyebrow">Team Member</div>
+    <div class="member-layout">
+      <div class="member-left">
+        <div class="member-avatar" style="background:none;border:none;padding:0;overflow:hidden;">
+          <img src="Sean Kuo.jpg" alt="Sean Kuo" style="width:180px;height:180px;object-fit:cover;object-position:center 15%;border-radius:50%;border:3px solid rgba(255,140,0,.4);">
+        </div>
+        <div class="member-name">Sean Kuo<br><span style="font-size:18px;color:var(--steel);">郭永欽</span></div>
+        <div class="member-title">Supplier Development Engineer</div>
+      </div>
+      <div class="member-right">
+        <div class="info-block">
+          <div class="info-label">Job Information</div>
+          <div class="info-content">
+            <span style="color:var(--steel);font-size:12px;">Global Title</span><br>
+            Supplier Development Engineer<br>
+            <span style="color:var(--steel);font-size:12px;margin-top:4px;display:block;">Local Title</span>
+            供應商工程開發工程師
+          </div>
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="info-block">
+            <div class="info-label">Department</div>
+            <div class="info-content">Supply Development Engineering<br><span style="color:var(--steel);font-size:12px;">Operations Engineering · Manufacturing Indirect</span></div>
+          </div>
+          <div class="info-block">
+            <div class="info-label">Tenure</div>
+            <div class="info-content">Hired: <strong style="color:var(--orange);">Feb 2, 2026</strong><br><span style="color:var(--yellow);">~4 mos at SRAM</span></div>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Product Responsibility</div>
+          <div class="chips">
+            <span class="chip">◎ Crown</span>
+            <span class="chip">◎ Air Can</span>
+            <span class="chip">◎ Seat Post Parts</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Manager · Location</div>
+          <div class="info-content">Verny (Wei Sheng) Chen — Assistant Manager &nbsp;·&nbsp; ADC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑨ SUSPENSION -->
+  <div class="slide bg-content" data-i="9">
+    <div class="eyebrow" style="font-size:clamp(20px,2.8vw,44px);letter-spacing:4px;text-align:center;width:100%;">Current Supplier Allocation</div>
+    <h2 class="no-bar" style="text-align:center;width:100%;">SUSPENSION</h2>
+    <div style="width:100%;margin-top:24px;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:clamp(13px,1.6vw,18px);">
+        <thead>
+          <tr>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">PART TYPE</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">FORGING SUPPLIER</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:34%;">TIER-1 SUPPLIER</th>
+          </tr>
+        </thead>
+        <tbody id="susp-tbody">
+          <tr style="background:var(--card);">
+            <td class="td-part">Crown*</td>
+            <td class="td-edit" contenteditable="true">ACCU/SFM/HC/<span style="color:#ff6b6b;font-weight:900;">Sakya</span>/</td>
+            <td class="td-edit" contenteditable="true">WHF/SFM/GSn/SK_SRAM/HC/<span style="color:#ff6b6b;font-weight:900;">Sakya</span></td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Twist Lock</td>
+            <td class="td-edit" contenteditable="true">SFM</td>
+            <td class="td-edit" contenteditable="true">SFM</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Maxle</td>
+            <td class="td-edit" contenteditable="true">CM/HC</td>
+            <td class="td-edit" contenteditable="true">HC/GSO/YL</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Lockout</td>
+            <td class="td-edit" contenteditable="true">SFM</td>
+            <td class="td-edit" contenteditable="true">SFM</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Housing Stop*</td>
+            <td class="td-edit" contenteditable="true">SFM/ACCU/KD</td>
+            <td class="td-edit" contenteditable="true">YL/SFM/GSn</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Knob*</td>
+            <td class="td-edit" contenteditable="true">SFM/KD</td>
+            <td class="td-edit" contenteditable="true">SFM/GSn/YL</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Eyelet</td>
+            <td class="td-edit" contenteditable="true">ACCU/CM/KD</td>
+            <td class="td-edit" contenteditable="true">GSO/GSn/YL</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Damper Body*</td>
+            <td class="td-edit" contenteditable="true">CT/KT</td>
+            <td class="td-edit" contenteditable="true">KT/<span style="color:#ff6b6b;font-weight:900;">GTC</span>/WHF/YL</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Aircan*</td>
+            <td class="td-edit" contenteditable="true">CT/<span style="color:#ff6b6b;font-weight:900;">Sakya</span></td>
+            <td class="td-edit" contenteditable="true">YL/<span style="color:#ff6b6b;font-weight:900;">GTC</span>/Sakya/KT</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Yoke*</td>
+            <td class="td-edit" contenteditable="true">CM/ACCU/KD</td>
+            <td class="td-edit" contenteditable="true">YL/GSn</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="suspAddRow()" style="padding:6px 16px;background:var(--accent);color:#000;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit;">+ 新增列</button>
+        <button onclick="suspDelRow()" style="padding:6px 16px;background:var(--card2);color:var(--steel);border:1px solid #333;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">− 刪除末列</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑩ CRANKS -->
+  <div class="slide bg-content" data-i="10">
+    <div class="eyebrow" style="font-size:clamp(20px,2.8vw,44px);letter-spacing:4px;text-align:center;width:100%;">Current Supplier Allocation</div>
+    <h2 class="no-bar" style="text-align:center;width:100%;">CRANKS</h2>
+    <div style="width:100%;margin-top:24px;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:clamp(13px,1.6vw,18px);">
+        <thead>
+          <tr>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">PART TYPE</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">FORGING SUPPLIER</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:34%;">TIER-1 SUPPLIER</th>
+          </tr>
+        </thead>
+        <tbody id="cranks-tbody">
+          <tr style="background:var(--card);">
+            <td class="td-part">Crank Arm*</td>
+            <td class="td-edit" contenteditable="true">ACCU/CT/CM/HC</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">HC</span>/FC_SRAM/FL/ISP</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Spindle</td>
+            <td class="td-edit" contenteditable="true">KT/AFT</td>
+            <td class="td-edit" contenteditable="true">KT/ISP</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">One-piece Crank Arm</td>
+            <td class="td-edit" contenteditable="true">CM</td>
+            <td class="td-edit" contenteditable="true">ISP</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Bonded Spindle</td>
+            <td class="td-edit" contenteditable="true">CM/K.D</td>
+            <td class="td-edit" contenteditable="true">ISP/KT</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">B.B Cup</td>
+            <td class="td-edit" contenteditable="true">AFT/BC</td>
+            <td class="td-edit" contenteditable="true">AFT</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Spider*</td>
+            <td class="td-edit" contenteditable="true">CM/ACCU</td>
+            <td class="td-edit" contenteditable="true">FL/KT</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Lug</td>
+            <td class="td-edit" contenteditable="true">CT</td>
+            <td class="td-edit" contenteditable="true">CT</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="cranksAddRow()" style="padding:6px 16px;background:var(--accent);color:#000;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit;">+ 新增列</button>
+        <button onclick="cranksDelRow()" style="padding:6px 16px;background:var(--card2);color:var(--steel);border:1px solid #333;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">− 刪除末列</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑪ FRONT/REAR DERAILLEURS / ROAD SHIFTER -->
+  <div class="slide bg-content" data-i="11">
+    <div class="eyebrow" style="font-size:clamp(20px,2.8vw,44px);letter-spacing:4px;text-align:center;width:100%;">Current Supplier Allocation</div>
+    <h2 class="no-bar" style="text-align:center;width:100%;">FRONT/REAR DERAILLEURS / ROAD SHIFTER</h2>
+    <div style="width:100%;margin-top:24px;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:clamp(13px,1.6vw,18px);">
+        <thead>
+          <tr>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">PART TYPE</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">FORGING SUPPLIER</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:34%;">TIER-1 SUPPLIER</th>
+          </tr>
+        </thead>
+        <tbody id="derail-tbody">
+          <tr style="background:var(--card);">
+            <td class="td-part">B-knuckle*</td>
+            <td class="td-edit" contenteditable="true">CT/ACCU/CM</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">GTC</span>/K.H/Y.L</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Inner Link*</td>
+            <td class="td-edit" contenteditable="true">ACCU/CT/SFM/KD</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">GTC</span>/SFM/Y.L</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Outer Link*</td>
+            <td class="td-edit" contenteditable="true">ACCU/CT/SFM/KD</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">GTC</span>/SFM/Y.L</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Inner Cage</td>
+            <td class="td-edit" contenteditable="true">CT/Sakya</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">GTC</span>/<span style="color:#ff6b6b;font-weight:900;">Sakya</span>/Y.L</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Outer Cage*</td>
+            <td class="td-edit" contenteditable="true">CT/KD/Sakya</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">GTC</span>/<span style="color:#ff6b6b;font-weight:900;">Sakya</span>/Y.L</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Brake Lever</td>
+            <td class="td-edit" contenteditable="true">CM/SFM</td>
+            <td class="td-edit" contenteditable="true">WHF/SFM</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Lever</td>
+            <td class="td-edit" contenteditable="true">KD</td>
+            <td class="td-edit" contenteditable="true">KD</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="derailAddRow()" style="padding:6px 16px;background:var(--accent);color:#000;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit;">+ 新增列</button>
+        <button onclick="derailDelRow()" style="padding:6px 16px;background:var(--card2);color:var(--steel);border:1px solid #333;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">− 刪除末列</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑫ BRAKES / WHEEL / SEAT POST -->
+  <div class="slide bg-content" data-i="12">
+    <div class="eyebrow" style="font-size:clamp(20px,2.8vw,44px);letter-spacing:4px;text-align:center;width:100%;">Current Supplier Allocation</div>
+    <h2 class="no-bar" style="text-align:center;width:100%;">BRAKES / WHEEL / SEAT POST</h2>
+    <div style="width:100%;margin-top:24px;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:clamp(13px,1.6vw,18px);">
+        <thead>
+          <tr>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">PART TYPE</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:33%;">FORGING SUPPLIER</th>
+            <th style="padding:14px 20px;text-align:left;background:var(--card2);color:var(--title);font-weight:900;letter-spacing:2px;border-bottom:2px solid var(--accent);width:34%;">TIER-1 SUPPLIER</th>
+          </tr>
+        </thead>
+        <tbody id="brakes-tbody">
+          <tr style="background:var(--card);">
+            <td class="td-part">Caliper*</td>
+            <td class="td-edit" contenteditable="true">SFM/C.M</td>
+            <td class="td-edit" contenteditable="true">SFM/KT/WHF/FC_SRAM</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Lever Body</td>
+            <td class="td-edit" contenteditable="true">KT/SFM</td>
+            <td class="td-edit" contenteditable="true">KT/SFM</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Bracket</td>
+            <td class="td-edit" contenteditable="true">KD/CM</td>
+            <td class="td-edit" contenteditable="true">WHF/KD</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Hub</td>
+            <td class="td-edit" contenteditable="true">CM/Leechi/(AFT)</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">HC</span>/Leechi/YL</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Drive Body</td>
+            <td class="td-edit" contenteditable="true">CM/Leechi/(AFT)</td>
+            <td class="td-edit" contenteditable="true"><span style="color:#ff6b6b;font-weight:900;">HC</span>/Leechi/YL</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Head</td>
+            <td class="td-edit" contenteditable="true">SFM/CM</td>
+            <td class="td-edit" contenteditable="true">YL/SFM</td>
+          </tr>
+          <tr style="background:var(--card);">
+            <td class="td-part">Retainer*</td>
+            <td class="td-edit" contenteditable="true">SFM/CM</td>
+            <td class="td-edit" contenteditable="true">YL/SFM</td>
+          </tr>
+          <tr style="background:var(--card2);">
+            <td class="td-part">Clamp*</td>
+            <td class="td-edit" contenteditable="true">SFM/CM</td>
+            <td class="td-edit" contenteditable="true">YL/SFM</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="brakesAddRow()" style="padding:6px 16px;background:var(--accent);color:#000;border:none;border-radius:6px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit;">+ 新增列</button>
+        <button onclick="brakesDelRow()" style="padding:6px 16px;background:var(--card2);color:var(--steel);border:1px solid #333;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">− 刪除末列</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑬ HEATING CURVE VERIFICATION -->
+  <div class="slide bg-content" data-i="13" style="justify-content:flex-start;align-items:center;">
+    <div class="eyebrow" style="font-size:clamp(20px,2.8vw,44px);letter-spacing:4px;text-align:center;width:100%;margin-bottom:14px;">Supplier Capability Enhancement Project</div>
+    <h2 class="no-bar" style="text-align:center;width:100%;margin-bottom:16px;">HEATING CURVE VERIFICATION</h2>
+
+    <!-- Excel Online embed -->
+    <div style="width:100%;flex:1;min-height:0;border-radius:10px;overflow:hidden;border:2px solid #2a2a2a;">
+      <iframe
+        src="https://sram0-my.sharepoint.com/:x:/g/personal/vechen_sram_com/IQA6hcGjm7PEQpRl6ijIoaxdAYk88Ui-lxbDyDza0VZdE40?e=x7g39f&action=embedview&wdAllowInteractivity=True&wdHideSheetTabs=False&wdDownloadButton=False"
+        width="100%" height="100%"
+        frameborder="0"
+        style="display:block;border:none;">
+      </iframe>
+    </div>
+  </div>
+
+  <!-- ⑭ PPT EMBED -->
+  <div class="slide bg-content" data-i="14" style="justify-content:flex-start;align-items:center;">
+    <div class="eyebrow" style="font-size:clamp(20px,2.8vw,44px);letter-spacing:4px;text-align:center;width:100%;margin-bottom:14px;">Supplier Capability Enhancement Project</div>
+    <h2 class="no-bar" style="font-size:clamp(26px,3.2vw,42px);text-align:center;width:100%;margin-bottom:16px;">How to Review the Simulation Report</h2>
+    <div style="width:100%;flex:1;min-height:0;margin-bottom:64px;border-radius:10px;overflow:hidden;border:2px solid #2a2a2a;">
+      <iframe
+        src="https://sram0-my.sharepoint.com/:p:/g/personal/vechen_sram_com/IQBCZej28qNyS6ejUbVK-1edAVpF04kcxu7QcwERRo1aOx4?e=wkubEi&action=embedview&wdAr=1.7777777777777777"
+        width="100%" height="100%"
+        frameborder="0"
+        style="display:block;border:none;">
+      </iframe>
+    </div>
+  </div>
+
+  <!-- ⑮ SWOT -->
+  <div class="slide bg-content" data-i="15">
+    <div class="eyebrow" style="font-size:clamp(20px,2.8vw,44px);letter-spacing:4px;text-align:center;width:100%;">Strategic Analysis</div>
+    <h2 class="no-bar" style="text-align:center;width:100%;">SWOT Analysis</h2>
+    <div class="swot">
+      <div class="swot-box sw-s">
+        <div class="swot-label">Strengths</div>
+        <ul>
+          <li>Strong mechanical &amp; materials engineering background (bachelor+)</li>
+          <li>Deep forging process expertise supporting LPD teams</li>
+          <li>Dedicated manufacturing problem-solving capability</li>
+          <li>Average team seniority: <strong>9.5 years</strong> at SRAM</li>
+        </ul>
+      </div>
+      <div class="swot-box sw-w">
+        <div class="swot-label">Weaknesses</div>
+        <ul>
+          <li>Lack of long-term employee career path vision</li>
+          <li>No flexible resource for advanced process study</li>
+          <li>Less familiarity with structured problem-solving tools</li>
+        </ul>
+      </div>
+      <div class="swot-box sw-o">
+        <div class="swot-label">Opportunities</div>
+        <ul>
+          <li>Electric assist &amp; electronic control — emerging growth areas</li>
+          <li>Eco-friendly materials &amp; low-carbon production gaining traction</li>
+          <li>Rapidly growing demand in China &amp; India for high-quality components</li>
+        </ul>
+      </div>
+      <div class="swot-box sw-t">
+        <div class="swot-label">Threats</div>
+        <ul>
+          <li>Chinese &amp; SE Asian manufacturers challenging on cost</li>
+          <li>Geopolitical changes disrupting material supply &amp; trade</li>
+          <li>Global inflation suppressing demand for high-end components</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑯ CLOSING -->
+  <div class="slide bg-close" data-i="16">
+    <div class="deco" style="width:380px;height:380px;background:var(--orange);bottom:-90px;left:-70px;"></div>
+    <div class="deco" style="width:200px;height:200px;background:#005590;top:50px;right:50px;"></div>
+    <div class="eyebrow">SRAM Forging Group · MY26</div>
+    <h1>Thank You</h1>
+    <p class="sub">Forging Group Introduction</p>
+    <p class="meta" style="margin-top:22px;">Verny Chen &nbsp;|&nbsp; Manufacturing Engineering &nbsp;|&nbsp; <span id="today-close"></span></p>
+  </div>
+
+</div><!-- /deck -->
+
+<div id="nav">
+  <button class="nb" id="bprev" onclick="go(-1)" disabled>&#8592;</button>
+  <span id="counter">1 / 11</span>
+  <button class="nb" id="bnext" onclick="go(1)">&#8594;</button>
+</div>
+<div id="hint">← → Arrow keys</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const N = slides.length;
+  let cur = 0, busy = false;
+
+  function go(d) {
+    if (busy) return;
+    const nxt = cur + d;
+    if (nxt < 0 || nxt >= N) return;
+    busy = true;
+    slides[cur].classList.add('exit');
+    slides[cur].classList.remove('active');
+    setTimeout(() => {
+      slides[cur].classList.remove('exit');
+      slides[nxt].classList.add('active');
+      cur = nxt;
+      render();
+      setTimeout(() => busy = false, 420);
+    }, 140);
+  }
+
+  function render() {
+    document.getElementById('counter').textContent = `${cur+1} / ${N}`;
+    document.getElementById('bprev').disabled = cur === 0;
+    document.getElementById('bnext').disabled = cur === N-1;
+    document.getElementById('progress').style.width = `${(cur+1)/N*100}%`;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') go(-1);
+  });
+
+  render();
+
+  /* ── TABLE PERSISTENCE (localStorage) ── */
+  const TABLE_IDS = []; // all forge columns handled by multi-select; tier-1 columns saved separately
+
+
+  function saveTable(id) {
+    const el = document.getElementById(id);
+    if (el) localStorage.setItem('tbl_' + id, el.innerHTML);
+  }
+
+  function loadTables() {
+    TABLE_IDS.forEach(id => {
+      const saved = localStorage.getItem('tbl_' + id);
+      const el = document.getElementById(id);
+      if (saved && el) el.innerHTML = saved;
+    });
+  }
+
+  function bindTableInput() {
+    TABLE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => saveTable(id));
+    });
+  }
+
+  function makeNewRow(tbody) {
+    const bg = tbody.rows.length % 2 === 0 ? 'var(--card)' : 'var(--card2)';
+    const tr = document.createElement('tr');
+    tr.style.background = bg;
+    tr.innerHTML = `
+      <td class="td-part" contenteditable="true" style="color:var(--white);font-weight:800;padding:12px 20px;border-bottom:1px solid #2a2a2a;"></td>
+      <td class="td-edit" contenteditable="true"></td>
+      <td class="td-edit" contenteditable="true"></td>`;
+    return tr;
+  }
+
+  function tableAddRow(id) {
+    const tbody = document.getElementById(id);
+    const tr = makeNewRow(tbody);
+    tbody.appendChild(tr);
+    tr.querySelector('.td-part').focus();
+    saveTable(id);
+  }
+
+  function tableDelRow(id) {
+    const tbody = document.getElementById(id);
+    if (tbody.rows.length > 1) { tbody.deleteRow(tbody.rows.length - 1); saveTable(id); }
+  }
+
+  function suspAddRow()   { forgeAddRow('susp-tbody'); }
+  function suspDelRow()   { forgeDelRow('susp-tbody'); }
+  function cranksAddRow() { forgeAddRow('cranks-tbody'); }
+  function cranksDelRow() { forgeDelRow('cranks-tbody'); }
+  function derailAddRow() { forgeAddRow('derail-tbody'); }
+  function derailDelRow() { forgeDelRow('derail-tbody'); }
+  function brakesAddRow() { forgeAddRow('brakes-tbody'); }
+  function brakesDelRow() { forgeDelRow('brakes-tbody'); }
+
+  /* ── MULTI-SELECT ENGINE ── */
+  const MS_MAX = 6;
+  const FORGE_OPTS  = ['仟懋','揚阡','淳梓','鎬錩','皇翔(鑫峰)','金鍛','世佳','亨盈','群展','天承','邦昌金屬'];
+  const TIER1_OPTS  = ['WHF','SFM','GSn','SK_SRAM','HC','Sakya','GSO','YL','KT','GTC',
+                       'FC_SRAM','FL','ISP','AFT','CT','K.H','Y.L','KD','Leechi'];
+
+  function buildMSHTML(opts, sel) {
+    const chips = sel.map(v => `<span class="ms-chip">${v}</span>`).join('');
+    const items = opts.map(v => {
+      const chk = sel.includes(v) ? ' checked' : '';
+      return `<label><input type="checkbox" value="${v}"${chk} onchange="msChange(this)"><span>${v}</span></label>`;
+    }).join('');
+    return `<div class="ms-wrap"><div class="ms-display" onclick="msOpen(this.parentElement)"><span class="ms-chips">${chips}</span><span class="ms-caret">▾</span></div><div class="ms-dd">${items}</div></div>`;
+  }
+
+  function msOpen(wrap) {
+    const dd = wrap.querySelector('.ms-dd');
+    const isOpen = dd.classList.contains('open');
+    document.querySelectorAll('.ms-dd.open').forEach(d => d.classList.remove('open'));
+    if (!isOpen) dd.classList.add('open');
+  }
+
+  function msChange(cb) {
+    const wrap = cb.closest('.ms-wrap');
+    if ([...wrap.querySelectorAll('input:checked')].length > MS_MAX) { cb.checked = false; return; }
+    wrap.querySelector('.ms-chips').innerHTML = [...wrap.querySelectorAll('input:checked')]
+      .map(c => `<span class="ms-chip">${c.value}</span>`).join('');
+    const tbody = cb.closest('tbody');
+    const td = cb.closest('td');
+    const tr = cb.closest('tr');
+    if (td === tr.cells[1]) saveForgeCol(tbody); else saveTier1Col(tbody);
+  }
+
+  function saveForgeCol(tbody) {
+    localStorage.setItem('forge_' + tbody.id, JSON.stringify([...tbody.rows].map(tr =>
+      [...tr.cells[1].querySelectorAll('input:checked')].map(cb => cb.value)
+    )));
+  }
+
+  function saveTier1Col(tbody) {
+    localStorage.setItem('tier1_' + tbody.id, JSON.stringify([...tbody.rows].map(tr =>
+      [...tr.cells[2].querySelectorAll('input:checked')].map(cb => cb.value)
+    )));
+  }
+
+  function parseTier1Text(cell) {
+    // parse existing text content into array matching TIER1_OPTS
+    return cell.textContent.split('/').map(s => s.trim()).filter(s => TIER1_OPTS.includes(s));
+  }
+
+  function initForgeTable(tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    const forgeData = JSON.parse(localStorage.getItem('forge_' + tbodyId) || '[]');
+    const tier1Raw  = localStorage.getItem('tier1_' + tbodyId);
+    // detect new format (array of arrays) vs old format (array of HTML strings)
+    let tier1Data = null;
+    if (tier1Raw) {
+      const parsed = JSON.parse(tier1Raw);
+      if (Array.isArray(parsed[0])) tier1Data = parsed; // new format
+    }
+
+    [...tbody.rows].forEach((tr, i) => {
+      // ── Column 1: Forge ──
+      const cell1 = tr.cells[1];
+      cell1.removeAttribute('contenteditable');
+      cell1.className = '';
+      cell1.style.cssText = 'padding:8px 12px;border-bottom:1px solid #2a2a2a;vertical-align:middle;';
+      cell1.innerHTML = buildMSHTML(FORGE_OPTS, forgeData[i] || []);
+
+      // ── Column 2: Tier-1 ──
+      const cell2 = tr.cells[2];
+      const tier1Sel = (tier1Data && tier1Data[i]) ? tier1Data[i] : parseTier1Text(cell2);
+      cell2.removeAttribute('contenteditable');
+      cell2.className = '';
+      cell2.style.cssText = 'padding:8px 12px;border-bottom:1px solid #2a2a2a;vertical-align:middle;';
+      cell2.innerHTML = buildMSHTML(TIER1_OPTS, tier1Sel);
+    });
+  }
+
+  function forgeAddRow(id) {
+    const tbody = document.getElementById(id);
+    const bg = tbody.rows.length % 2 === 0 ? 'var(--card)' : 'var(--card2)';
+    const tr = document.createElement('tr');
+    tr.style.background = bg;
+    const td0 = document.createElement('td');
+    td0.className = 'td-part'; td0.contentEditable = 'true';
+    td0.style.cssText = 'color:var(--white);font-weight:800;padding:12px 20px;border-bottom:1px solid #2a2a2a;';
+    const td1 = document.createElement('td');
+    td1.style.cssText = 'padding:8px 12px;border-bottom:1px solid #2a2a2a;vertical-align:middle;';
+    td1.innerHTML = buildMSHTML(FORGE_OPTS, []);
+    const td2 = document.createElement('td');
+    td2.style.cssText = 'padding:8px 12px;border-bottom:1px solid #2a2a2a;vertical-align:middle;';
+    td2.innerHTML = buildMSHTML(TIER1_OPTS, []);
+    tr.append(td0, td1, td2);
+    tbody.appendChild(tr);
+    td0.focus();
+    saveForgeCol(tbody);
+  }
+
+  function forgeDelRow(id) {
+    const tbody = document.getElementById(id);
+    if (tbody.rows.length > 1) {
+      tbody.deleteRow(tbody.rows.length - 1);
+      saveForgeCol(tbody);
+      saveTier1Col(tbody);
+    }
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ms-wrap')) {
+      document.querySelectorAll('.ms-dd.open').forEach(d => d.classList.remove('open'));
+    }
+  });
+
+  loadTables();
+  bindTableInput();
+  ['susp-tbody','cranks-tbody','derail-tbody','brakes-tbody'].forEach(initForgeTable);
+
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('today-title').textContent = dateStr;
+  document.getElementById('today-close').textContent = dateStr;
+</script>
+</body>
+</html>
