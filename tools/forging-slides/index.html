@@ -1137,9 +1137,55 @@
     return cell.textContent.split('/').map(s => s.trim()).filter(s => TIER1_OPTS.includes(s));
   }
 
+  // ── 預設供應商資料（嵌入 HTML，讓所有人開啟時看到相同內容）──
+  const DEFAULT_FORGE = {
+    'susp-tbody': [
+      ["揚阡","鎬錩","皇翔(鑫峰)","世佳"],
+      ["皇翔(鑫峰)"],
+      ["仟懋","鎬錩"],
+      ["皇翔(鑫峰)"],
+      ["揚阡","皇翔(鑫峰)","金鍛"],
+      ["皇翔(鑫峰)","金鍛"],
+      ["仟懋","揚阡","金鍛"],
+      ["淳梓","金鍛"],
+      ["淳梓","金鍛"],
+      ["仟懋","揚阡","金鍛"]
+    ],
+    'cranks-tbody': [
+      ["仟懋","揚阡","淳梓","鎬錩"],
+      ["群展","天承"],
+      ["仟懋"],
+      ["仟懋","金鍛"],
+      ["天承","邦昌金屬"],
+      ["仟懋","揚阡"],
+      ["淳梓"]
+    ],
+    'derail-tbody': [
+      ["仟懋","揚阡","淳梓"],
+      ["揚阡","淳梓"],
+      ["皇翔(鑫峰)","金鍛"],
+      ["揚阡","淳梓","皇翔(鑫峰)","金鍛"],
+      ["淳梓","世佳"],
+      ["淳梓","金鍛"],
+      ["世佳"],
+      ["淳梓","金鍛"],
+      ["皇翔(鑫峰)"],
+      ["金鍛"]
+    ],
+    'brakes-tbody': [
+      ["仟懋","皇翔(鑫峰)","亨盈","群展","天承"],
+      ["皇翔(鑫峰)","群展"],
+      ["仟懋","金鍛"],
+      ["仟懋"],
+      ["皇翔(鑫峰)"],
+      ["仟懋","皇翔(鑫峰)"],
+      ["仟懋","皇翔(鑫峰)"]
+    ]
+  };
+
   function initForgeTable(tbodyId) {
     const tbody = document.getElementById(tbodyId);
-    const forgeData = JSON.parse(localStorage.getItem('forge_' + tbodyId) || '[]');
+    const forgeData = JSON.parse(localStorage.getItem('forge_' + tbodyId) || 'null') || DEFAULT_FORGE[tbodyId] || [];
     const tier1Raw  = localStorage.getItem('tier1_' + tbodyId);
     // detect new format (array of arrays) vs old format (array of HTML strings)
     let tier1Data = null;
